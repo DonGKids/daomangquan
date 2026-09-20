@@ -1,0 +1,44 @@
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# 数据库（含用户数据，不进镜像）
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# 日志
+*.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+
+# 文档（不需要进镜像）
+*.md
+LICENSE
+
+# 环境变量
+.env
+.env.example
+
+# 临时文件
+pdf_text.txt
+extract_pdf.py
+_test_*.py
+
+# Docker 自身
+Dockerfile
+docker-compose.yml
+.dockerignore

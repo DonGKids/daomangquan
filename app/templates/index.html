@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}导茫犬 · 大学生扫茫信息服务平台{% endblock %}
+{% block content %}
+
+<style>
+/* ─── 首页专属样式（GitHub trending 风格） ─── */
+.hero {
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+    color: white;
+    padding: 64px 32px 56px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(37,99,235,0.25);
+}
+.hero h1 { font-size: 40px; font-weight: 800; margin-bottom: 12px; letter-spacing: -1px; }
+.hero .sub { font-size: 18px; opacity: 0.92; margin-bottom: 28px; }
+.hero .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.hero .cta {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: inline-block;
+}
+.hero .cta-primary { background: white; color: #2563eb; }
+.hero .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+.hero .cta-ghost { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.4); }
+.hero .cta-ghost:hover { background: rgba(255,255,255,0.25); }
+
+/* 统计网格 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+.stat-card {
+    background: var(--card);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+.stat-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); transform: translateY(-2px); }
+.stat-num { font-size: 32px; font-weight: 700; color: var(--primary); line-height: 1; }
+.stat-label { color: var(--text-light); font-size: 13px; margin-top: 6px; }
+
+/* 章节标题 */
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.section-title h2 { font-size: 20px; font-weight: 700; color: var(--text); margin: 0; }
+.section-title a { color: var(--primary); font-size: 13px; text-decoration: none; }
+.section-title a:hover { text-decoration: underline; }
+
+/* 功能卡片网格 */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+.feature-card {
+    background: var(--card);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+    display: block;
+}
+.feature-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+    border-color: var(--primary-light);
+}
+.feature-card .icon { font-size: 28px; margin-bottom: 12px; display: block; }
+.feature-card .ft-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.feature-card .ft-desc { color: var(--text-light); font-size: 13px; line-height: 1.6; }
+.feature-card .ft-link { color: var(--primary); font-size: 13px; margin-top: 12px; display: inline-block; }
+
+/* 话题标签（分类入口） */
+.topic-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+
+/* 个性化推荐 */
+.recommend-group { margin-bottom: 24px; }
+.recommend-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+.recommend-card {
+    background: var(--card);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
+    display: block;
+}
+.recommend-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
+}
+.info-cat-badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #1e40af;
+}
+@media (max-width: 700px) {
+    .recommend-grid { grid-template-columns: 1fr; }
+}
+.topic-pill {
+    background: #f1f5ff;
+    color: #1e40af;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid #dbeafe;
+    transition: background 0.15s, transform 0.15s;
+}
+.topic-pill:hover { background: #dbeafe; transform: translateY(-1px); }
+.topic-pill .desc { color: #64748b; font-weight: 400; margin-left: 6px; }
+
+/* 最新讨论列表 */
+.trending-list {
+    background: var(--card);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.trend-item {
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+.trend-item:last-child { border-bottom: none; }
+.trend-item:hover { background: #f8fafc; }
+.trend-row1 { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 4px; }
+.trend-title { font-size: 15px; font-weight: 600; color: var(--primary); }
+.trend-meta { color: var(--text-light); font-size: 12px; }
+.trend-excerpt { color: var(--text-light); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+@media (max-width: 700px) {
+    .hero { padding: 40px 16px 32px; }
+    .hero h1 { font-size: 28px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .feature-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+{% if error %}
+<div class="card"><p style="color:#ef4444;">{{ error }}</p></div>
+{% else %}
+
+{# ─── Hero ─── #}
+<section class="hero">
+    <h1>导茫犬</h1>
+    <p class="sub">专为大学生打造的「扫茫」信息服务平台 · 让每一个迷茫都有方向</p>
+    <div class="cta-row">
+        <a href="/maze" class="cta cta-primary">🔍 开始迷茫检测</a>
+        <a href="/info" class="cta cta-ghost">📚 浏览信息库</a>
+    </div>
+</section>
+
+{# ─── 平台统计 ─── #}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-num">{{ stats.users }}</div>
+        <div class="stat-label">注册用户</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{ stats.infos }}</div>
+        <div class="stat-label">信息库条目</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{ stats.posts }}</div>
+        <div class="stat-label">论坛帖子</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-num">{{ stats.comments }}</div>
+        <div class="stat-label">评论互动</div>
+    </div>
+</div>
+
+{# ─── 核心功能 ─── #}
+<div class="section-title">
+    <h2>核心功能</h2>
+</div>
+<div class="feature-grid">
+    <a href="/maze" class="feature-card">
+        <span class="icon">🔍</span>
+        <div class="ft-title">迷茫检测</div>
+        <div class="ft-desc">输入你当前的困惑，系统自动识别关键词并匹配分类，生成个性化信息推荐，帮你从迷茫到清晰。</div>
+        <span class="ft-link">开始检测 →</span>
+    </a>
+    <a href="/info" class="feature-card">
+        <span class="icon">📚</span>
+        <div class="ft-title">分类信息库</div>
+        <div class="ft-desc">四大分类覆盖大学生核心场景：生活常识、升学就业、法律知识、创业资讯。结构化整理，告别碎片化搜索。</div>
+        <span class="ft-link">浏览信息 →</span>
+    </a>
+    <a href="/forum" class="feature-card">
+        <span class="icon">💬</span>
+        <div class="ft-title">互助论坛</div>
+        <div class="ft-desc">和同学一起发帖、评论、交流经验。无论是求助还是分享，这里都有人接住你的问题。</div>
+        <span class="ft-link">参与讨论 →</span>
+    </a>
+    <a href="/profile" class="feature-card">
+        <span class="icon">👤</span>
+        <div class="ft-title">个人中心</div>
+        <div class="ft-desc">查看你的检测历史、发帖记录、提交反馈。一站式管理你在平台上的所有足迹。</div>
+        <span class="ft-link">查看中心 →</span>
+    </a>
+</div>
+
+{# ─── 个性化推荐（仅登录用户可见） ─── #}
+{% if is_logged_in %}
+<div class="section-title">
+    <h2>🎯 为你推荐</h2>
+    {% if has_detection %}
+    <span style="color:var(--text-light);font-size:12px;">基于你最近一次迷茫检测</span>
+    {% endif %}
+</div>
+
+{% if has_detection and recommendations %}
+{% for group in recommendations %}
+<div class="recommend-group">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <span class="info-cat-badge">{{ group.category }}</span>
+        <span style="color:var(--text-light);font-size:12px;">{{ group.reason }}</span>
+    </div>
+    <div class="recommend-grid">
+        {% for item in group['items'] %}
+        <a href="/info?category={{ group.category }}" class="recommend-card">
+            <h3 style="margin-bottom:6px;color:var(--primary);">{{ item.title }}</h3>
+            <p style="color:var(--text-light);font-size:13px;line-height:1.6;
+                overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+                -webkit-line-clamp:2;-webkit-box-orient:vertical;">
+                {{ item.content[:80] }}{% if item.content|length > 80 %}...{% endif %}
+            </p>
+            <span class="ft-link" style="margin-top:8px;">查看详情 →</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card" style="text-align:center;padding:32px;">
+    <p style="color:var(--text);font-size:16px;margin-bottom:8px;">完成第一次迷茫检测，解锁专属推荐</p>
+    <p style="color:var(--text-light);font-size:13px;margin-bottom:16px;">系统会根据你输入的困惑自动匹配相关信息，并在这里为你展示。</p>
+    <a href="/maze" class="btn">🔍 立即检测</a>
+</div>
+{% endif %}
+{% endif %}
+
+{# ─── 信息库分类入口（GitHub Topics 风格） ─── #}
+<div class="section-title">
+    <h2>信息库分类</h2>
+    <a href="/info">查看全部 →</a>
+</div>
+<div class="topic-row">
+    {% for c in categories %}
+    <a href="/info?category={{ c.name }}" class="topic-pill">
+        {{ c.name }}
+        <span class="desc">· {{ c.description }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+{# ─── 最新讨论（GitHub Trending 风格） ─── #}
+<div class="section-title">
+    <h2>最新讨论</h2>
+    <a href="/forum">进入论坛 →</a>
+</div>
+{% if latest_posts %}
+<div class="trending-list">
+    {% for p in latest_posts %}
+    <a href="/post/{{ p.id }}" class="trend-item">
+        <div class="trend-row1">
+            <span class="trend-title">{{ p.title }}</span>
+            <span class="trend-meta">💬 {{ p.reply_count }} · {{ p.create_time[:10] }}</span>
+        </div>
+        <div class="trend-excerpt">👤 {{ p.author }} · {{ p.content[:60] }}{% if p.content|length > 60 %}...{% endif %}</div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <p style="color:var(--text-light);text-align:center;padding:20px 0;">
+        论坛还没有帖子，<a href="/forum" style="color:var(--primary);">来发表第一篇 →</a>
+    </p>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

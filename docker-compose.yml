@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    container_name: daomangquan
+    ports:
+      - "5000:5000"
+    volumes:
+      # 数据库持久化：宿主机 ./data 挂载到容器 /app/data
+      - ./data:/app/data
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-dev-only-do-not-use-in-prod}
+      - FLASK_DEBUG=0
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
+      - DATABASE=/app/data/daomangquan.db
+    restart: unless-stopped

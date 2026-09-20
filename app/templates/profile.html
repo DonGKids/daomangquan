@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}个人中心{% endblock %}
+{% block content %}
+
+{% if error %}
+<div class="card">
+    <p style="color:#ef4444;">{{ error }}</p>
+    <a href="/" class="btn" style="display:inline-block;margin-top:12px;">返回首页</a>
+</div>
+{% else %}
+
+{# ─── 用户信息卡片 ─── #}
+<div class="card">
+    <div style="display:flex;align-items:center;gap:20px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:white;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;flex-shrink:0;">
+            {{ user.username[:1] }}
+        </div>
+        <div style="flex:1;">
+            <h2 class="title" style="margin-bottom:8px;">{{ user.username }}</h2>
+            <div style="color:var(--text-light);font-size:14px;display:flex;flex-wrap:wrap;gap:12px;">
+                {% if user.student_id %}<span>学号：{{ user.student_id }}</span>{% endif %}
+                {% if user.college %}<span>学院：{{ user.college }}</span>{% endif %}
+                {% if user.major %}<span>专业：{{ user.major }}</span>{% endif %}
+                {% if user.created_at %}<span>注册：{{ user.created_at[:10] }}</span>{% endif %}
+            </div>
+        </div>
+        <a href="/logout" class="btn" style="background:#64748b;">退出登录</a>
+    </div>
+</div>
+
+{# ─── 数据统计 ─── #}
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;">
+    <div class="card" style="text-align:center;margin-bottom:0;">
+        <div style="font-size:36px;font-weight:700;color:var(--primary);">{{ detect_count }}</div>
+        <div style="color:var(--text-light);font-size:14px;margin-top:4px;">迷茫检测次数</div>
+        <a href="/maze" class="btn" style="display:inline-block;margin-top:12px;padding:6px 16px;font-size:13px;">去检测</a>
+    </div>
+    <div class="card" style="text-align:center;margin-bottom:0;">
+        <div style="font-size:36px;font-weight:700;color:var(--primary);">{{ post_count }}</div>
+        <div style="color:var(--text-light);font-size:14px;margin-top:4px;">论坛发帖数</div>
+        <a href="/forum" class="btn" style="display:inline-block;margin-top:12px;padding:6px 16px;font-size:13px;">去发帖</a>
+    </div>
+    <div class="card" style="text-align:center;margin-bottom:0;">
+        <div style="font-size:36px;font-weight:700;color:var(--primary);">{{ feedback_count }}</div>
+        <div style="color:var(--text-light);font-size:14px;margin-top:4px;">反馈提交数</div>
+        <span class="btn" style="display:inline-block;margin-top:12px;padding:6px 16px;font-size:13px;cursor:pointer;background:#64748b;" onclick="document.getElementById('feedback-content').focus();">写反馈</span>
+    </div>
+</div>
+
+{# ─── 迷茫检测历史 ─── #}
+<div class="card">
+    <h3 class="title">🔍 迷茫检测历史</h3>
+    {% if detections %}
+    <div>
+        {% for d in detections %}
+        <div class="list-item">
+            <span style="color:var(--text-light);font-size:12px;display:block;margin-bottom:6px;">{{ d.create_time[:19] }}</span>
+            <p style="color:var(--text);margin-bottom:8px;">{{ d.content[:80] }}{% if d.content|length > 80 %}...{% endif %}</p>
+            <div id="det-{{ d.id }}" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-light);text-align:center;padding:24px 0;">
+        还没有检测记录，<a href="/maze" style="color:var(--primary);">立即开始第一次迷茫检测 →</a>
+    </p>
+    {% endif %}
+</div>
+
+{# ─── 发帖历史 ─── #}
+<div class="card">
+    <h3 class="title">💬 我的发帖</h3>
+    {% if my_posts %}
+    <div>
+        {% for p in my_posts %}
+        <div class="list-item">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:6px;">
+                <h3 style="margin-bottom:0;">{{ p.title }}</h3>
+                <span style="color:var(--text-light);font-size:12px;white-space:nowrap;">{{ p.create_time[:10] }}</span>
+            </div>
+            <p>{{ p.content[:100] }}{% if p.content|length > 100 %}...{% endif %}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-light);text-align:center;padding:24px 0;">
+        还没有发过帖子，<a href="/forum" style="color:var(--primary);">前往论坛发表第一篇 →</a>
+    </p>
+    {% endif %}
+</div>
+
+{# ─── 反馈区：输入 + 历史 ─── #}
+<div class="card">
+    <h3 class="title">📝 意见反馈</h3>
+    <p style="color:var(--text-light);font-size:13px;margin-bottom:12px;">
+        对平台有任何建议、bug 报告或功能想法，欢迎告诉我们。我们会认真阅读每一条反馈。
+    </p>
+    <textarea id="feedback-content" rows="3" placeholder="说说你的建议或遇到的问题（最多 500 字）"></textarea>
+    <input id="feedback-contact" type="text" placeholder="联系方式（选填，方便我们回复，如邮箱/微信）" style="margin-top:8px;">
+    <button class="btn" onclick="submitFeedback()">提交反馈</button>
+</div>
+
+<div class="card">
+    <h3 class="title">📋 我的反馈历史</h3>
+    {% if my_feedback %}
+    <div>
+        {% for f in my_feedback %}
+        <div class="list-item">
+            <div style="display:flex;justify-content:space-between;align-items:start;gap:12px;margin-bottom:6px;">
+                <span style="font-size:12px;padding:2px 8px;border-radius:999px;
+                    {% if f.status == 'resolved' %}
+                        background:#dcfce7;color:#15803d;
+                    {% else %}
+                        background:#fef3c7;color:#b45309;
+                    {% endif %}
+                ">{{ '已处理' if f.status == 'resolved' else '待处理' }}</span>
+                <span style="color:var(--text-light);font-size:12px;white-space:nowrap;">{{ f.create_time[:19] }}</span>
+            </div>
+            <p>{{ f.content[:120] }}{% if f.content|length > 120 %}...{% endif %}</p>
+            {% if f.contact %}
+            <p style="color:var(--text-light);font-size:12px;margin-top:4px;">📞 {{ f.contact }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color:var(--text-light);text-align:center;padding:24px 0;">
+        还没有提交过反馈，在上方输入框写下你的第一条建议吧。
+    </p>
+    {% endif %}
+</div>
+
+{% endif %}
+
+<script>
+function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
+function submitFeedback() {
+    const content = document.getElementById('feedback-content').value.trim();
+    const contact = document.getElementById('feedback-contact').value.trim();
+    if (!content) {
+        showToast('请输入反馈内容', 'error');
+        return;
+    }
+    if (content.length > 500) {
+        showToast('反馈内容不能超过 500 字', 'error');
+        return;
+    }
+    api.post('/api/feedback', { content: content, contact: contact }, d => {
+        if (d.code === 200) {
+            showToast(d.msg, 'success');
+            // 刷新页面以显示新的反馈记录
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            showToast(d.msg, 'error');
+        }
+    });
+}
+</script>
+
+{% if detections %}
+<script>
+// detections 已传入模板；为每条记录解析 JSON 渲染关键词/分类标签
+const data = {{ detections | tojson | safe }};
+
+document.addEventListener('DOMContentLoaded', () => {
+    data.forEach(d => {
+        const container = document.getElementById('det-' + d.id);
+        if (!container) return;
+        let kws = [], cats = [];
+        try { kws = JSON.parse(d.keywords || '[]'); } catch (e) {}
+        try { cats = JSON.parse(d.categories || '[]'); } catch (e) {}
+        let html = '';
+        cats.forEach(c => {
+            html += `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:999px;font-size:12px;">${escapeHtml(c)}</span>`;
+        });
+        kws.forEach(k => {
+            html += `<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:999px;font-size:12px;">${escapeHtml(k)}</span>`;
+        });
+        if (!html) {
+            html = `<span style="color:var(--text-light);font-size:12px;">未识别到明确关键词</span>`;
+        }
+        container.innerHTML = html;
+    });
+});
+</script>
+{% endif %}
+
+{% endblock %}
