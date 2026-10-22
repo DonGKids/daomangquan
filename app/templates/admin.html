@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}管理后台 - 导茫犬{% endblock %}
+{% block content %}
+<style>
+.admin-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+.admin-tab {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f1f5f9;
+    color: var(--text-light);
+    border: 1px solid transparent;
+    transition: all 0.15s;
+}
+.admin-tab:hover { background: #e2e8f0; color: var(--text); }
+.admin-tab.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+.admin-table th, .admin-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+.admin-table th {
+    background: #f8fafc;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.admin-table tr:hover td { background: #f8fafc; }
+.admin-table .actions { white-space: nowrap; }
+.admin-table .actions button {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-right: 4px;
+    border: 1px solid;
+}
+.btn-delete {
+    background: white;
+    color: #ef4444;
+    border-color: #ef4444;
+}
+.btn-delete:hover { background: #ef4444; color: white; }
+.btn-edit {
+    background: white;
+    color: var(--primary);
+    border-color: var(--primary);
+}
+.btn-edit:hover { background: var(--primary); color: white; }
+.btn-resolve {
+    background: white;
+    color: #10b981;
+    border-color: #10b981;
+}
+.btn-resolve:hover { background: #10b981; color: white; }
+.admin-pagination {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+.admin-pagination button {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+}
+.admin-pagination button.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+.admin-pagination button:disabled {
+    background: #f8fafc;
+    color: #cbd5e1;
+    cursor: not-allowed;
+}
+.admin-status-badge {
+    display: inline-block;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+.status-pending { background: #fef3c7; color: #b45309; }
+.status-resolved { background: #dcfce7; color: #15803d; }
+.admin-empty {
+    color: var(--text-light);
+    text-align: center;
+    padding: 40px;
+}
+.admin-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.admin-form-row.full { grid-template-columns: 1fr; }
+.admin-form-row select,
+.admin-form-row input,
+.admin-form-row textarea {
+    margin: 0;
+}
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.admin-actions .btn { padding: 8px 16px; font-size: 13px; }
+.admin-actions .btn-secondary {
+    background: #64748b;
+}
+.admin-edit-banner {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+</style>
+
+<div class="card">
+    <h2 class="title">🛠 管理后台</h2>
+    <p style="color:var(--text-light);font-size:13px;margin-bottom:16px;">
+        管理论坛帖子、信息库内容、用户与用户反馈。
+    </p>
+
+    <div class="admin-tabs">
+        <span class="admin-tab active" data-tab="posts" onclick="switchTab('posts')">💬 论坛管理</span>
+        <span class="admin-tab" data-tab="infos" onclick="switchTab('infos')">📚 信息库管理</span>
+        <span class="admin-tab" data-tab="users" onclick="switchTab('users')">👥 用户管理</span>
+        <span class="admin-tab" data-tab="feedbacks" onclick="switchTab('feedbacks')">📝 反馈管理</span>
+    </div>
+
+    {# ─── 论坛管理 ─── #}
+    <div class="admin-panel active" id="panel-posts">
+        <h3 class="title" style="font-size:16px;">📋 帖子列表</h3>
+        <div id="posts-table-wrap">
+            <p class="admin-empty">正在加载...</p>
+        </div>
+        <div class="admin-pagination" id="posts-pagination"></div>
+    </div>
+
+    {# ─── 信息库管理 ─── #}
+    <div class="admin-panel" id="panel-infos">
+        <div id="info-edit-banner" class="admin-edit-banner" style="display:none;">
+            <span>正在编辑信息 ID: <strong id="info-edit-id"></strong></span>
+            <button class="btn btn-secondary" style="padding:4px 10px;font-size:12px;" onclick="cancelEditInfo()">取消编辑</button>
+        </div>
+        <h3 class="title" style="font-size:16px;">➕ 新增 / 编辑信息</h3>
+        <div class="admin-form-row">
+            <select id="info-cate-id"><option value="">请选择分类</option></select>
+            <input id="info-title" type="text" placeholder="标题（必填，最长 200 字）">
+        </div>
+        <div class="admin-form-row full">
+            <textarea id="info-content" rows="4" placeholder="内容（必填，最长 5000 字）"></textarea>
+        </div>
+        <div class="admin-actions">
+            <button class="btn" id="info-submit-btn" onclick="submitInfo()">新增信息</button>
+        </div>
+
+        <h3 class="title" style="font-size:16px;margin-top:24px;">📋 信息列表</h3>
+        <div id="infos-table-wrap">
+            <p class="admin-empty">正在加载...</p>
+        </div>
+    </div>
+
+    {# ─── 用户管理 ─── #}
+    <div class="admin-panel" id="panel-users">
+        <h3 class="title" style="font-size:16px;">👥 用户列表</h3>
+        <div id="users-table-wrap">
+            <p class="admin-empty">正在加载...</p>
+        </div>
+    </div>
+
+    {# ─── 反馈管理 ─── #}
+    <div class="admin-panel" id="panel-feedbacks">
+        <h3 class="title" style="font-size:16px;">📝 用户反馈</h3>
+        <div id="feedbacks-table-wrap">
+            <p class="admin-empty">正在加载...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}
